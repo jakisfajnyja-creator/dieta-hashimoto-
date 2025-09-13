@@ -10,6 +10,7 @@
     .section { margin: 20px 0; }
     button, input, select { margin: 5px 0; padding: 10px; width: 100%; font-size: 16px; }
     .output { background: #fff; padding: 10px; border-radius: 5px; }
+    .checkbox-group { display: flex; flex-direction: column; }
   </style>
 </head>
 <body>
@@ -25,7 +26,12 @@
       <option value="1.5">Średnia aktywność</option>
       <option value="1.8">Duża aktywność</option>
     </select>
-    <button onclick="calculateCalories()">Oblicz kalorie</button>
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="noLactose" /> Bez laktozy</label>
+      <label><input type="checkbox" id="lowProtein" /> Niskobiałkowa</label>
+      <label><input type="checkbox" id="noGluten" /> Bezglutenowa</label>
+    </div>
+    <button onclick="saveUserData()">Zapisz dane</button>
     <div id="calories" class="output"></div>
   </div>
 
@@ -42,73 +48,117 @@
     </select>
     <button onclick="generateMeals()">Generuj posiłki</button>
     <div id="meals" class="output"></div>
+    <button onclick="saveFavorite()">Zapisz jako ulubione</button>
   </div>
 
   <div class="section">
     <h2>Lista zakupów</h2>
     <button onclick="generateShoppingList()">Generuj listę</button>
     <div id="shopping" class="output"></div>
+    <button onclick="downloadShoppingList()">Pobierz jako plik</button>
   </div>
 
   <script>
-    const mealOptions = {
-      breakfast: [
-        { name: "Omlet ze szpinakiem", ingredients: ["jajka", "szpinak", "oliwa"], calories: 300 },
-        { name: "Jogurt kokosowy z borówkami", ingredients: ["jogurt kokosowy", "borówki", "migdały"], calories: 250 }
-      ],
-      lunch: [
-        { name: "Kurczak z kaszą gryczaną", ingredients: ["kurczak", "kasza gryczana", "cukinia"], calories: 500 },
-        { name: "Łosoś z warzywami", ingredients: ["łosoś", "brokuły", "marchew", "oliwa"], calories: 550 }
-      ],
-      dinner: [
-        { name: "Sałatka z tuńczykiem", ingredients: ["tuńczyk", "sałata", "jabłko", "oliwa"], calories: 400 },
-        { name: "Kasza jaglana z warzywami", ingredients: ["kasza jaglana", "cukinia", "marchew"], calories: 350 }
-      ]
-    };
+    const meals = [
+      {
+        name: "Owsianka z borówkami",
+        type: "breakfast",
+        ingredients: { "płatki owsiane": "50 g", "mleko migdałowe": "200 ml", "borówki": "50 g", "siemię lniane": "1 łyżka" },
+        calories: 320,
+        tags: ["bez laktozy", "bezglutenowa"]
+      },
+      {
+        name: "Sałatka z łososiem",
+        type: "lunch",
+        ingredients: { "łosoś": "150 g", "szpinak": "50 g", "oliwa z oliwek": "1 łyżka", "cytryna": "1 szt." },
+        calories: 450,
+        tags: ["bez laktozy"]
+      },
+      {
+        name: "Kasza jaglana z warzywami",
+        type: "dinner",
+        ingredients: { "kasza jaglana": "60 g", "cukinia": "100 g", "marchew": "80 g", "oliwa": "1 łyżka" },
+        calories: 400,
+        tags: ["bezglutenowa", "bez laktozy"]
+      }
+    ];
 
-    let currentMeals = {};
+    let userData = JSON.parse(localStorage.getItem("userData")) || {};
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || {};
+    let currentMeals = [];
 
-    function calculateCalories() {
-      const age = +document.getElementById("age").value;
-      const height = +document.getElementById("height").value;
-      const weight = +document.getElementById("weight").value;
-      const activity = +document.getElementById("activity").value;
-      if (!age || !height || !weight) return;
-      const bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-      const total = Math.round(bmr * activity);
+    function saveUserData() {
+      userData = {
+        age: +document.getElementById("age").value,
+        height: +document.getElementById("height").value,
+        weight: +document.getElementById("weight").value,
+        activity: +document.getElementById("activity").value,
+        noLactose: document.getElementById("noLactose").checked,
+        lowProtein: document.getElementById("lowProtein").checked,
+        noGluten: document.getElementById("noGluten").checked
+      };
+      localStorage.setItem("userData", JSON.stringify(userData));
+      const bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age + 5;
+      const total = Math.round(bmr * userData.activity);
       document.getElementById("calories").innerText = `Zalecane kalorie: ${total}`;
     }
 
-    function getRandomMeal(type) {
-      const options = mealOptions[type];
-      return options[Math.floor(Math.random() * options.length)];
+    function generateMeals() {
+      const filters = [];
+      if (userData.noLactose) filters.push("bez laktozy");
+      if (userData.noGluten) filters.push("bezglutenowa");
+      if (userData.lowProtein) filters.push("niskobiałkowa");
+
+      currentMeals = ["breakfast", "lunch", "dinner"].map(type => {
+        const options = meals.filter(m => m.type === type && filters.every(f => m.tags.includes(f)));
+        return options[Math.floor(Math.random() * options.length)];
+      });
+
+      let html = "";
+      currentMeals.forEach(meal => {
+        html += `<strong>${meal.name}</strong> (${meal.calories} kcal)<br>`;
+        html += `Składniki:<ul>`;
+        for (let [item, qty] of Object.entries(meal.ingredients)) {
+          html += `<li>${item} – ${qty}</li>`;
+        }
+        html += `</ul><br>`;
+      });
+      document.getElementById("meals").innerHTML = html;
     }
 
-    function generateMeals() {
-      const breakfast = getRandomMeal("breakfast");
-      const lunch = getRandomMeal("lunch");
-      const dinner = getRandomMeal("dinner");
-      currentMeals = { breakfast, lunch, dinner };
-      const output = `
-        <strong>Śniadanie:</strong> ${breakfast.name} (${breakfast.calories} kcal)<br>
-        Składniki: ${breakfast.ingredients.join(", ")}<br><br>
-        <strong>Obiad:</strong> ${lunch.name} (${lunch.calories} kcal)<br>
-        Składniki: ${lunch.ingredients.join(", ")}<br><br>
-        <strong>Kolacja:</strong> ${dinner.name} (${dinner.calories} kcal)<br>
-        Składniki: ${dinner.ingredients.join(", ")}
-      `;
-      document.getElementById("meals").innerHTML = output;
+    function saveFavorite() {
+      const day = document.getElementById("day").value;
+      favorites[day] = currentMeals;
+      localStorage.setItem("favorites", JSON.stringify(favorites));
+      alert("Ulubione zapisane dla " + day);
     }
 
     function generateShoppingList() {
-      if (!currentMeals.breakfast) return;
-      const allIngredients = [
-        ...currentMeals.breakfast.ingredients,
-        ...currentMeals.lunch.ingredients,
-        ...currentMeals.dinner.ingredients
-      ];
-      const unique = [...new Set(allIngredients)];
-      document.getElementById("shopping").innerText = unique.join(", ");
+      const allIngredients = {};
+      Object.values(favorites).forEach(dayMeals => {
+        dayMeals.forEach(meal => {
+          for (let [item, qty] of Object.entries(meal.ingredients)) {
+            if (!allIngredients[item]) allIngredients[item] = [];
+            allIngredients[item].push(qty);
+          }
+        });
+      });
+
+      let html = "<ul>";
+      for (let item in allIngredients) {
+        html += `<li>${item} – ${allIngredients[item].join(" + ")}</li>`;
+      }
+      html += "</ul>";
+      document.getElementById("shopping").innerHTML = html;
+    }
+
+    function downloadShoppingList() {
+      const text = document.getElementById("shopping").innerText;
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "lista_zakupow.txt";
+      link.click();
     }
   </script>
 </body>
