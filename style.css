@@ -1,0 +1,91 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 1rem;
+  background: #f2f2f2;
+}
+
+main {
+  max-width: 600px;
+  margin: auto;
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+#add-goal-btn {
+  display: block;
+  margin: 2rem auto;
+  font-size: 1.2rem;
+  padding: 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.goal {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.progress-bar {
+  height: 20px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #4CAF50;
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.goal-actions button {
+  margin-right: 0.5rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+.hidden {
+  display: none;
+}
+
+#modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.confetti {
+  animation: pop 0.5s ease;
+  color: gold;
+  font-size: 2rem;
+  text-align: center;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}

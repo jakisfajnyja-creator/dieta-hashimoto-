@@ -3,163 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dieta Hashimoto</title>
-  <style>
-    body { font-family: sans-serif; margin: 10px; background: #f0f0f0; }
-    h1, h2 { text-align: center; }
-    .section { margin: 20px 0; }
-    button, input, select { margin: 5px 0; padding: 10px; width: 100%; font-size: 16px; }
-    .output { background: #fff; padding: 10px; border-radius: 5px; }
-    .checkbox-group { display: flex; flex-direction: column; }
-  </style>
+  <title>Celownik</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Dieta Hashimoto</h1>
+  <main>
+    <h1>🎯 Celownik</h1>
 
-  <div class="section">
-    <h2>Twoje dane</h2>
-    <input type="number" id="age" placeholder="Wiek" />
-    <input type="number" id="height" placeholder="Wzrost (cm)" />
-    <input type="number" id="weight" placeholder="Waga (kg)" />
-    <select id="activity">
-      <option value="1.2">Mała aktywność</option>
-      <option value="1.5">Średnia aktywność</option>
-      <option value="1.8">Duża aktywność</option>
-    </select>
-    <div class="checkbox-group">
-      <label><input type="checkbox" id="noLactose" /> Bez laktozy</label>
-      <label><input type="checkbox" id="lowProtein" /> Niskobiałkowa</label>
-      <label><input type="checkbox" id="noGluten" /> Bezglutenowa</label>
+    <section id="active-goals">
+      <h2>Aktywne cele</h2>
+      <div id="goals-container"></div>
+    </section>
+
+    <section id="completed-goals">
+      <h2>✅ Zrealizowane cele</h2>
+      <div id="completed-container"></div>
+    </section>
+
+    <section id="history">
+      <h2>📦 Historia</h2>
+      <div id="history-container"></div>
+    </section>
+
+    <button id="add-goal-btn">➕ Dodaj cel</button>
+  </main>
+
+  <div id="modal" class="hidden">
+    <div class="modal-content">
+      <h3>Nowy cel</h3>
+      <input type="text" id="goal-name" placeholder="Nazwa celu" />
+      <input type="number" id="goal-target" placeholder="Wartość docelowa" />
+      <input type="text" id="goal-icon" placeholder="Emoji (np. 💰)" />
+      <input type="color" id="goal-color" value="#4CAF50" />
+      <button id="save-goal">Zapisz</button>
     </div>
-    <button onclick="saveUserData()">Zapisz dane</button>
-    <div id="calories" class="output"></div>
   </div>
 
-  <div class="section">
-    <h2>Wybierz dzień</h2>
-    <select id="day">
-      <option>Poniedziałek</option>
-      <option>Wtorek</option>
-      <option>Środa</option>
-      <option>Czwartek</option>
-      <option>Piątek</option>
-      <option>Sobota</option>
-      <option>Niedziela</option>
-    </select>
-    <button onclick="generateMeals()">Generuj posiłki</button>
-    <div id="meals" class="output"></div>
-    <button onclick="saveFavorite()">Zapisz jako ulubione</button>
-  </div>
-
-  <div class="section">
-    <h2>Lista zakupów</h2>
-    <button onclick="generateShoppingList()">Generuj listę</button>
-    <div id="shopping" class="output"></div>
-    <button onclick="downloadShoppingList()">Pobierz jako plik</button>
-  </div>
-
-  <script>
-    const meals = [
-      {
-        name: "Owsianka z borówkami",
-        type: "breakfast",
-        ingredients: { "płatki owsiane": "50 g", "mleko migdałowe": "200 ml", "borówki": "50 g", "siemię lniane": "1 łyżka" },
-        calories: 320,
-        tags: ["bez laktozy", "bezglutenowa"]
-      },
-      {
-        name: "Sałatka z łososiem",
-        type: "lunch",
-        ingredients: { "łosoś": "150 g", "szpinak": "50 g", "oliwa z oliwek": "1 łyżka", "cytryna": "1 szt." },
-        calories: 450,
-        tags: ["bez laktozy"]
-      },
-      {
-        name: "Kasza jaglana z warzywami",
-        type: "dinner",
-        ingredients: { "kasza jaglana": "60 g", "cukinia": "100 g", "marchew": "80 g", "oliwa": "1 łyżka" },
-        calories: 400,
-        tags: ["bezglutenowa", "bez laktozy"]
-      }
-    ];
-
-    let userData = JSON.parse(localStorage.getItem("userData")) || {};
-    let favorites = JSON.parse(localStorage.getItem("favorites")) || {};
-    let currentMeals = [];
-
-    function saveUserData() {
-      userData = {
-        age: +document.getElementById("age").value,
-        height: +document.getElementById("height").value,
-        weight: +document.getElementById("weight").value,
-        activity: +document.getElementById("activity").value,
-        noLactose: document.getElementById("noLactose").checked,
-        lowProtein: document.getElementById("lowProtein").checked,
-        noGluten: document.getElementById("noGluten").checked
-      };
-      localStorage.setItem("userData", JSON.stringify(userData));
-      const bmr = 10 * userData.weight + 6.25 * userData.height - 5 * userData.age + 5;
-      const total = Math.round(bmr * userData.activity);
-      document.getElementById("calories").innerText = `Zalecane kalorie: ${total}`;
-    }
-
-    function generateMeals() {
-      const filters = [];
-      if (userData.noLactose) filters.push("bez laktozy");
-      if (userData.noGluten) filters.push("bezglutenowa");
-      if (userData.lowProtein) filters.push("niskobiałkowa");
-
-      currentMeals = ["breakfast", "lunch", "dinner"].map(type => {
-        const options = meals.filter(m => m.type === type && filters.every(f => m.tags.includes(f)));
-        return options[Math.floor(Math.random() * options.length)];
-      });
-
-      let html = "";
-      currentMeals.forEach(meal => {
-        html += `<strong>${meal.name}</strong> (${meal.calories} kcal)<br>`;
-        html += `Składniki:<ul>`;
-        for (let [item, qty] of Object.entries(meal.ingredients)) {
-          html += `<li>${item} – ${qty}</li>`;
-        }
-        html += `</ul><br>`;
-      });
-      document.getElementById("meals").innerHTML = html;
-    }
-
-    function saveFavorite() {
-      const day = document.getElementById("day").value;
-      favorites[day] = currentMeals;
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-      alert("Ulubione zapisane dla " + day);
-    }
-
-    function generateShoppingList() {
-      const allIngredients = {};
-      Object.values(favorites).forEach(dayMeals => {
-        dayMeals.forEach(meal => {
-          for (let [item, qty] of Object.entries(meal.ingredients)) {
-            if (!allIngredients[item]) allIngredients[item] = [];
-            allIngredients[item].push(qty);
-          }
-        });
-      });
-
-      let html = "<ul>";
-      for (let item in allIngredients) {
-        html += `<li>${item} – ${allIngredients[item].join(" + ")}</li>`;
-      }
-      html += "</ul>";
-      document.getElementById("shopping").innerHTML = html;
-    }
-
-    function downloadShoppingList() {
-      const text = document.getElementById("shopping").innerText;
-      const blob = new Blob([text], { type: "text/plain" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "lista_zakupow.txt";
-      link.click();
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
