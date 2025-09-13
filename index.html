@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dieta Hashimoto</title>
+  <style>
+    body { font-family: sans-serif; margin: 10px; background: #f0f0f0; }
+    h1, h2 { text-align: center; }
+    .section { margin: 20px 0; }
+    button, input, select { margin: 5px 0; padding: 10px; width: 100%; font-size: 16px; }
+    .output { background: #fff; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Dieta Hashimoto</h1>
+
+  <div class="section">
+    <h2>Twoje dane</h2>
+    <input type="number" id="age" placeholder="Wiek" />
+    <input type="number" id="height" placeholder="Wzrost (cm)" />
+    <input type="number" id="weight" placeholder="Waga (kg)" />
+    <select id="activity">
+      <option value="1.2">Mała aktywność</option>
+      <option value="1.5">Średnia aktywność</option>
+      <option value="1.8">Duża aktywność</option>
+    </select>
+    <button onclick="calculateCalories()">Oblicz kalorie</button>
+    <div id="calories" class="output"></div>
+  </div>
+
+  <div class="section">
+    <h2>Wybierz dzień</h2>
+    <select id="day">
+      <option>Poniedziałek</option>
+      <option>Wtorek</option>
+      <option>Środa</option>
+      <option>Czwartek</option>
+      <option>Piątek</option>
+      <option>Sobota</option>
+      <option>Niedziela</option>
+    </select>
+    <button onclick="generateMeals()">Generuj posiłki</button>
+    <div id="meals" class="output"></div>
+  </div>
+
+  <div class="section">
+    <h2>Lista zakupów</h2>
+    <button onclick="generateShoppingList()">Generuj listę</button>
+    <div id="shopping" class="output"></div>
+  </div>
+
+  <script>
+    const mealOptions = {
+      breakfast: [
+        { name: "Omlet ze szpinakiem", ingredients: ["jajka", "szpinak", "oliwa"], calories: 300 },
+        { name: "Jogurt kokosowy z borówkami", ingredients: ["jogurt kokosowy", "borówki", "migdały"], calories: 250 }
+      ],
+      lunch: [
+        { name: "Kurczak z kaszą gryczaną", ingredients: ["kurczak", "kasza gryczana", "cukinia"], calories: 500 },
+        { name: "Łosoś z warzywami", ingredients: ["łosoś", "brokuły", "marchew", "oliwa"], calories: 550 }
+      ],
+      dinner: [
+        { name: "Sałatka z tuńczykiem", ingredients: ["tuńczyk", "sałata", "jabłko", "oliwa"], calories: 400 },
+        { name: "Kasza jaglana z warzywami", ingredients: ["kasza jaglana", "cukinia", "marchew"], calories: 350 }
+      ]
+    };
+
+    let currentMeals = {};
+
+    function calculateCalories() {
+      const age = +document.getElementById("age").value;
+      const height = +document.getElementById("height").value;
+      const weight = +document.getElementById("weight").value;
+      const activity = +document.getElementById("activity").value;
+      if (!age || !height || !weight) return;
+      const bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+      const total = Math.round(bmr * activity);
+      document.getElementById("calories").innerText = `Zalecane kalorie: ${total}`;
+    }
+
+    function getRandomMeal(type) {
+      const options = mealOptions[type];
+      return options[Math.floor(Math.random() * options.length)];
+    }
+
+    function generateMeals() {
+      const breakfast = getRandomMeal("breakfast");
+      const lunch = getRandomMeal("lunch");
+      const dinner = getRandomMeal("dinner");
+      currentMeals = { breakfast, lunch, dinner };
+      const output = `
+        <strong>Śniadanie:</strong> ${breakfast.name} (${breakfast.calories} kcal)<br>
+        Składniki: ${breakfast.ingredients.join(", ")}<br><br>
+        <strong>Obiad:</strong> ${lunch.name} (${lunch.calories} kcal)<br>
+        Składniki: ${lunch.ingredients.join(", ")}<br><br>
+        <strong>Kolacja:</strong> ${dinner.name} (${dinner.calories} kcal)<br>
+        Składniki: ${dinner.ingredients.join(", ")}
+      `;
+      document.getElementById("meals").innerHTML = output;
+    }
+
+    function generateShoppingList() {
+      if (!currentMeals.breakfast) return;
+      const allIngredients = [
+        ...currentMeals.breakfast.ingredients,
+        ...currentMeals.lunch.ingredients,
+        ...currentMeals.dinner.ingredients
+      ];
+      const unique = [...new Set(allIngredients)];
+      document.getElementById("shopping").innerText = unique.join(", ");
+    }
+  </script>
+</body>
+</html>
